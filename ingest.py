@@ -1,5 +1,6 @@
 import os
 import glob
+import re
 from dotenv import load_dotenv
 from upstash_vector import Index
 
@@ -7,65 +8,86 @@ from upstash_vector import Index
 load_dotenv()
 
 # 2. Connexion à l'index Upstash Vector
-# Les identifiants sont récupérés depuis le fichier .env
 index = Index(
     url=os.getenv("UPSTASH_VECTOR_REST_URL"), 
     token=os.getenv("UPSTASH_VECTOR_REST_TOKEN")
 )
 
-def chunk_markdown(content, chunk_size=500):
+def improved_chunking(content, max_char=1000):
     """
-    Découpe le contenu Markdown en morceaux (chunks)[cite: 62].
-    Ici, on utilise une logique simple par paragraphe ou par taille.
+    Découpe le contenu Markdown en sections cohérentes tout en respectant une taille maximale.
     """
-    # Une approche simple consiste à diviser par sections (titres ##)
+    # On commence par découper par les titres de niveau 2
     sections = content.split("\n## ")
-    chunks = []
+    final_chunks = []
     
     for i, section in enumerate(sections):
-        if i == 0:
-            chunks.append(section.strip())
+        text = section.strip()
+        if i > 0:
+            text = f"## {text}"
+            
+        # Si la section est trop longue, on la redécoupe par paragraphes
+        if len(text) > max_char:
+            paragraphs = text.split("\n\n")
+            current_chunk = ""
+            for para in paragraphs:
+                if len(current_chunk) + len(para) < max_char:
+                    current_chunk += para + "\n\n"
+                else:
+                    if current_chunk:
+                        final_chunks.append(current_chunk.strip())
+                    current_chunk = para + "\n\n"
+            if current_chunk:
+                final_chunks.append(current_chunk.strip())
         else:
-            chunks.append(f"## {section.strip()}")
-    return chunks
+            final_chunks.append(text)
+            
+    return final_chunks
 
 def ingest_data():
-    # Chemin vers votre dossier de données
+    # Nettoyage de l'index avant nouvelle ingestion
+    print("Suppression des données précédentes...")
+    index.delete("*")
+
     data_path = "data/*.md"
     files = glob.glob(data_path)
     
     if not files:
-        print("Aucun fichier Markdown trouvé dans le dossier 'data/'.")
+        print("Aucun fichier trouvé.")
         return
 
-    print(f"Début de l'indexation de {len(files)} fichiers...")
+    all_vectors = [] # Liste pour le batching
+    print(f"Préparation de l'indexation pour {len(files)} fichiers...")
 
     for file_path in files:
         file_name = os.path.basename(file_path)
-        
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # Étape de découpage (Chunking) [cite: 33, 59]
-        chunks = chunk_markdown(content)
+        chunks = improved_chunking(content)
         
-        # Préparation des vecteurs pour Upstash
-        # Note : Comme vous utilisez le modèle 'Hybrid' BAAI/bge-m3 sur Upstash, 
-        # le SDK s'occupe de l'embedding si vous envoyez du texte brut.
         for i, chunk in enumerate(chunks):
+            # Extraction du titre de la section pour les métadonnées
+            title_match = re.search(r"^#+\s+(.*)", chunk)
+            section_title = title_match.group(1) if title_match else "Général"
+            
             chunk_id = f"{file_name}-chunk-{i}"
             
-            # Envoi vers la base de données vectorielle [cite: 95, 127]
-            index.upsert(
-                vectors=[
-                    (
-                        chunk_id, 
-                        chunk,              # Le texte brut (sera transformé en vecteur par Upstash) [cite: 81]
-                        {"source": file_name} # Métadonnées pour garder une trace de l'origine
-                    )
-                ]
-            )
-            print(f"Chunk indexé : {chunk_id}")
+            # CRUCIAL : On ajoute 'text' dans les métadonnées car agent.py le recherche
+            all_vectors.append((
+                chunk_id, 
+                chunk, 
+                {
+                    "source": file_name, 
+                    "text": chunk, 
+                    "section": section_title
+                }
+            ))
+
+    # Envoi par lots (Batch Upsert) - Beaucoup plus efficace que l'envoi un par un
+    if all_vectors:
+        print(f"Envoi de {len(all_vectors)} vecteurs vers Upstash...")
+        index.upsert(vectors=all_vectors)
 
     print("Indexation terminée avec succès !")
 

@@ -47,7 +47,7 @@ def run_agent(user_input: str, instructions: str, functions: List[callable], api
     # On intègre le contexte RAG directement dans le système pour cette interaction
     system_content = instructions
     if context:
-        system_content += f"\n\nCONTEXTE DU PORTFOLIO (utilise ces infos si pertinentes) :\n{context}"
+        system_content += f"\n\nCONTEXTE DU PROFIL (utilise ces infos si pertinentes) :\n{context}"
     
     messages = [{"role": "system", "content": system_content}]
     
@@ -82,8 +82,8 @@ def get_agent_response(user_input: str, history: List[Dict]) -> str:
     instructions = (
         "Tu es le jumeau virtuel de Rémi, étudiant en Science des Données. "
         "Sois concis, professionnel et chaleureux. "
-        "Ne te présente pas à chaque phrase si la conversation est déjà engagée. "
         "Réponds en utilisant le contexte fourni."
+        "Ne suggère pas de demander des informations que tu ne possèdes pas."
     )
     
     return run_agent(user_input, instructions, [search_portfolio], api_key, model_name, history)
