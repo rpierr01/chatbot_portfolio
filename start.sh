@@ -25,12 +25,18 @@ echo ""
 echo "🔹 Backend sera accessible sur: http://localhost:3001"
 echo "🔹 Frontend sera accessible sur: http://localhost:5173"
 echo ""
-echo "Pour arrêter l'application, utilisez Ctrl+C dans chaque terminal"
+echo "Pour arrêter l'application, utilisez Ctrl+C"
 echo ""
 
-# Lancer le backend et le frontend dans des terminaux séparés
-echo "📡 Démarrage du backend..."
-echo "   Ouvrez un nouveau terminal et exécutez: npm run dev:backend"
-echo ""
-echo "🎨 Démarrage du frontend..."
-echo "   Ouvrez un autre terminal et exécutez: npm run dev:frontend"
+# Vérifier si concurrently est disponible
+if [ -d "node_modules/concurrently" ]; then
+    echo "🚀 Démarrage des serveurs..."
+    npm run dev
+else
+    echo "⚠️  concurrently n'est pas installé. Installation..."
+    npm install
+    echo ""
+    echo "🚀 Démarrage des serveurs..."
+    npm run dev
+fi
+

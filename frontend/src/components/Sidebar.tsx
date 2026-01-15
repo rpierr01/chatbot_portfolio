@@ -5,6 +5,9 @@ interface SidebarProps {
 }
 
 function Sidebar({ messageCount, interactionCount, sessionDuration }: SidebarProps) {
+  // Note: Model name is hardcoded to match backend agent.ts configuration
+  const modelName = "gpt-4.1-nano";
+  
   return (
     <div className="sidebar">
       <div className="sidebar-content">
@@ -54,7 +57,7 @@ function Sidebar({ messageCount, interactionCount, sessionDuration }: SidebarPro
             🟢 <strong>OPÉRATIONNEL</strong>
           </div>
           <div className="status-details">
-            Modèle: gpt-4.1-nano<br />
+            Modèle: {modelName}<br />
             Latence: <span className="neon-text">Optimale</span>
           </div>
         </div>

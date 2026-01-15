@@ -85,7 +85,7 @@ function App() {
     <div className="app">
       <Sidebar
         messageCount={messages.length}
-        interactionCount={conversationHistory.length / 2}
+        interactionCount={Math.floor(conversationHistory.length / 2)}
         sessionDuration={getSessionDuration()}
       />
       

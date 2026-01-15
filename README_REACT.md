@@ -76,6 +76,13 @@ VITE_API_URL=http://localhost:3001
 
 ### Mode Développement
 
+**Option 1 - Lancer les deux serveurs en une seule commande (Recommandé):**
+```bash
+npm run dev
+```
+
+**Option 2 - Lancer les serveurs séparément:**
+
 **Terminal 1 - Backend :**
 ```bash
 cd backend
