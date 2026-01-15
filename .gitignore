@@ -4,3 +4,19 @@ __pycache__
 .pytest_cache
 venv
 clé openai.txt
+
+# Node
+node_modules
+dist
+.DS_Store
+
+# Backend
+backend/node_modules
+backend/dist
+backend/.env
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.env.local
+frontend/.env
