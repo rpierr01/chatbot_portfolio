@@ -53,7 +53,7 @@ st.markdown("""
     
     /* Messages de chat stylisés */
     .stChatMessage {
-        background: white; /* Changed from rgba(255, 255, 255, 0.05) to white */
+        background: rgba(255, 255, 255, 0.05);
         border: 1px solid rgba(0, 210, 255, 0.2);
         border-radius: 15px;
         padding: 1rem;
