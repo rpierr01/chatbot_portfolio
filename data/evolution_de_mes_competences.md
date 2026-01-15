@@ -1,0 +1,3 @@
+# evolution de mes competences
+
+## Au cours de mon cursus des 3 ans de BUT Science des Données, mes compétences dans le domaine de la data se sont améliorées. En première années j'ai découvert les bases. La deuxième année était plus dure mais j'ai réussi et j'ai réussi mon stage à l'étranger où j'ai appris à mettre en place un algorithme de Machine learning. En troisième année, j'ai commencé mon alternance dans l'entreprise 'Retour de Plage' où mon rôle est de développer et de structurer les outils de la Data de cette entreprise. 
