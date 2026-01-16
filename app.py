@@ -2,13 +2,13 @@ import streamlit as st
 import sys
 import os
 from datetime import datetime
+from agent import get_agent_response, load_conversation, save_conversation
+import uuid
 
 # streamlit run app.py
 
 # Ajouter le chemin du dossier projet-iut-potfolio pour importer agent.py
 sys.path.append(os.path.join(os.path.dirname(__file__), 'projet-iut-potfolio'))
-
-from agent import get_agent_response
 
 # Configuration de la page
 st.set_page_config(
@@ -18,22 +18,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Charger le CSS externe
-with open("styles.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+# Header technologique natif Streamlit
+st.title("🤖 RÉMI AI - JUMEAU VIRTUEL")
+st.subheader("⚡ Intelligence Artificielle | Science des Données | Portfolio Interactif")
 
-# Header technologique
-st.markdown("""
-<div class="tech-header">
-    <h1>🤖 RÉMI AI - JUMEAU VIRTUEL</h1>
-    <p class="tech-subtitle">⚡ Intelligence Artificielle | Science des Données | Portfolio Interactif</p>
-</div>
-""", unsafe_allow_html=True)
+# Générer ou récupérer un identifiant de session unique
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
 
 # Initialisation de l'historique dans le session_state
 if "messages" not in st.session_state:
-    st.session_state.messages = []
-    st.session_state.conversation_history = []
+    # Charger l'historique depuis Redis si disponible
+    history = load_conversation(st.session_state.session_id)
+    st.session_state.messages = history.copy() if history else []
+    st.session_state.conversation_history = history.copy() if history else []
     st.session_state.start_time = datetime.now()
 
 # Layout en colonnes pour les contrôles
@@ -58,10 +56,10 @@ if prompt := st.chat_input("💬 Posez votre question à Rémi..."):
     with st.chat_message("user"):
         st.markdown(prompt)
     
-    # Obtenir la réponse de l'agent
+    # Obtenir la réponse de l'agent (avec session_id pour sauvegarde)
     with st.chat_message("assistant"):
         with st.spinner("🔮 Analyse en cours..."):
-            response = get_agent_response(prompt, st.session_state.conversation_history)
+            response = get_agent_response(prompt, st.session_state.conversation_history, session_id=st.session_state.session_id)
         st.markdown(response)
     
     # Ajouter la réponse à l'interface
@@ -71,62 +69,40 @@ if prompt := st.chat_input("💬 Posez votre question à Rémi..."):
     st.session_state.conversation_history.append({"role": "user", "content": prompt})
     st.session_state.conversation_history.append({"role": "assistant", "content": response})
 
+    # Sauvegarder la conversation après chaque interaction
+    save_conversation(st.session_state.session_id, st.session_state.conversation_history)
+
 # Sidebar avec informations
 with st.sidebar:
-    st.markdown("### 🎯 SYSTÈME D'INFORMATION")
+    st.header("🎯 SYSTÈME D'INFORMATION")
     
-    # Métriques en temps réel
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-value pulse">{len(st.session_state.messages)}</div>
-        <div class="metric-label">MESSAGES ÉCHANGÉS</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-value neon-text">{len(st.session_state.conversation_history) // 2}</div>
-        <div class="metric-label">INTERACTIONS</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Métriques en temps réel avec st.metric
+    st.metric(label="MESSAGES ÉCHANGÉS", value=len(st.session_state.messages))
+    st.metric(label="INTERACTIONS", value=len(st.session_state.conversation_history) // 2)
     
     # Durée de session
     if "start_time" in st.session_state:
         duration = datetime.now() - st.session_state.start_time
         minutes = int(duration.total_seconds() // 60)
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">{minutes}</div>
-            <div class="metric-label">MINUTES DE SESSION</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.metric(label="MINUTES DE SESSION", value=minutes)
     
-    st.markdown("<hr>", unsafe_allow_html=True)
+    st.divider()
     
-    st.markdown("### ⚙️ CAPACITÉS DU SYSTÈME")
-    st.markdown("""
-    <div style='color: #e0e0e0; line-height: 1.8;'>
-    🔍 <span class="neon-text">Recherche Sémantique</span><br>
-    💾 <span class="neon-text">Mémoire Conversationnelle</span><br>
-    🧠 <span class="neon-text">IA Générative GPT-4.1</span><br>
-    📊 <span class="neon-text">Analyse de Portfolio</span><br>
-    ⚡ <span class="neon-text">Réponses en Temps Réel</span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.header("⚙️ CAPACITÉS DU SYSTÈME")
+    st.write(
+        "- 🔍 Recherche Sémantique\n"
+        "- 💾 Mémoire Conversationnelle\n"
+        "- 🧠 IA Générative GPT-4.1\n"
+        "- 📊 Analyse de Portfolio\n"
+        "- ⚡ Réponses en Temps Réel"
+    )
     
-    st.markdown("<hr>", unsafe_allow_html=True)
+    st.divider()
     
-    st.markdown("### 📡 STATUT SYSTÈME")
-    st.markdown("""
-    <div style='color: #00d2ff;'>
-    🟢 <strong>OPÉRATIONNEL</strong><br>
-    <span style='color: #e0e0e0; font-size: 0.85rem;'>
-    Modèle: gpt-4.1-nano<br>
-    Latence: <span class="neon-text">Optimale</span>
-    </span>
-    </div>
-    """, unsafe_allow_html=True)
+    st.header("📡 STATUT SYSTÈME")
+    st.success("🟢 OPÉRATIONNEL")
+    st.caption("Modèle: gpt-4.1-nano | Latence: Optimale")
     
-    st.markdown("<hr>", unsafe_allow_html=True)
+    st.divider()
     
-    st.caption("🔐 Interface Sécurisée | © 2024 Rémi AI")
+    st.caption("🔐 Interface Sécurisée | © 2026 Rémi AI")

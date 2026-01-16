@@ -4,6 +4,7 @@ from typing import List, Dict
 from dotenv import load_dotenv
 from openai import OpenAI
 from upstash_vector import Index
+from upstash_redis import Redis  # Ajout pour Redis
 
 # Chargement des variables d'environnement
 load_dotenv()
@@ -69,7 +70,36 @@ def run_agent(user_input: str, instructions: str, functions: List[callable], api
     except Exception as e:
         return f"Erreur lors de l'appel à l'API OpenAI : {e}"
 
-def get_agent_response(user_input: str, history: List[Dict]) -> str:
+# Connexion à Upstash Redis (pour la sauvegarde des conversations)
+def get_redis():
+    url = os.getenv("UPSTASH_REDIS_REST_URL")
+    token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+    if not url or not token:
+        return None
+    return Redis(url=url, token=token)
+
+def save_conversation(session_id: str, history: List[Dict]):
+    """
+    Sauvegarde l'historique de la conversation dans Redis.
+    """
+    redis = get_redis()
+    if redis:
+        import json
+        redis.set(session_id, json.dumps(history))
+
+def load_conversation(session_id: str) -> List[Dict]:
+    """
+    Charge l'historique de la conversation depuis Redis.
+    """
+    redis = get_redis()
+    if redis:
+        import json
+        data = redis.get(session_id)
+        if data:
+            return json.loads(data)
+    return []
+
+def get_agent_response(user_input: str, history: List[Dict], session_id: str = None) -> str:
     """
     Initialise l'agent IA avec les paramètres spécifiques.
     """
@@ -86,11 +116,21 @@ def get_agent_response(user_input: str, history: List[Dict]) -> str:
         "Ne suggère pas de demander des informations que tu ne possèdes pas."
     )
     
-    return run_agent(user_input, instructions, [search_portfolio], api_key, model_name, history)
+    response = run_agent(user_input, instructions, [search_portfolio], api_key, model_name, history)
+    # Sauvegarde de la conversation si session_id fourni
+    if session_id is not None:
+        # On ajoute la question et la réponse à l'historique
+        updated_history = history + [
+            {"role": "user", "content": user_input},
+            {"role": "assistant", "content": response}
+        ]
+        save_conversation(session_id, updated_history)
+    return response
 
 if __name__ == "__main__":
     # Initialisation de la mémoire (liste vide au départ)
-    conversation_history = []
+    session_id = "cli-session"  # Identifiant de session simple pour le CLI
+    conversation_history = load_conversation(session_id)
     
     print("--- Session Démarrée (Modèle: gpt-4.1-nano) ---")
     
@@ -106,12 +146,6 @@ if __name__ == "__main__":
             continue
 
         # Appel de l'agent avec l'historique actuel
-        response = get_agent_response(user_query, conversation_history)
+        response = get_agent_response(user_query, conversation_history, session_id=session_id)
         
         print(f"Rémi : {response}")
-        
-        # --- Sauvegarde dans la mémoire ---
-        # On ajoute la question de l'utilisateur
-        conversation_history.append({"role": "user", "content": user_query})
-        # On ajoute la réponse de l'assistant
-        conversation_history.append({"role": "assistant", "content": response})

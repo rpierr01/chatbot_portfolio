@@ -17,8 +17,3 @@
   - Étude biostatistique sur l'évolution de l'ADN des levures
 - Compétences développées : Machine Learning, bio-statistique, autonomie, travail en anglais
 
-## Emploi Saisonnier
-**Conseiller en ventes - Futuroscope** (Étés 2023, 2024 et Noël 2023)
-- Plateau d'appels téléphoniques pour organiser les séjours
-- Agence à l'entrée du parc : correction des erreurs de réservations
-- Développement de l'aisance relationnelle
