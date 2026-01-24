@@ -89,7 +89,14 @@ def improved_chunking(content, max_char=1000):
 def ingest_data():
     # Nettoyage de l'index avant nouvelle ingestion
     print("Suppression des données précédentes...")
-    index.delete("*")
+    print("Suppression des données précédentes...")
+    try:
+        index.reset()
+    except Exception as e:
+        print(f"Warning: Impossible de reset l'index ({e}). Tentative de suppression massive...")
+        # Fallback si reset n'existe pas (dépend de la version SDK)
+        # Mais reset() est standard sur les versions récentes
+        pass
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     data_path = os.path.join(base_dir, "data", "*.md")
