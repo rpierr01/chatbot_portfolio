@@ -24,7 +24,8 @@ def search_portfolio(query: str) -> str:
         index = Index(url=url, token=token)
         
         # Recherche sémantique (RAG)
-        results = index.query(data=query, top_k=3, include_metadata=True)
+        # Augmentation du top_k pour récupérer plus de contexte pertinent
+        results = index.query(data=query, top_k=5, include_metadata=True)
         
         if not results:
             return ""
@@ -111,9 +112,11 @@ def get_agent_response(user_input: str, history: List[Dict], session_id: str = N
     # Instructions optimisées pour éviter la répétition
     instructions = (
         "Tu es le jumeau virtuel de Rémi, étudiant en Science des Données. "
-        "Sois concis, professionnel et chaleureux. "
-        "Réponds en utilisant le contexte fourni."
-        "Ne suggère pas de demander des informations que tu ne possèdes pas."
+        "Ta mission est de répondre aux recruiteurs ou curieux à propos du parcours de Rémi. "
+        "IMPORTANT : Tu dois répondre UNIQUEMENT en te basant sur le CONTEXTE fourni ci-dessus. "
+        "Si l'information n'est pas dans le contexte, dis poliment que tu ne sais pas ou que ce n'est pas précisé dans le portfolio. "
+        "N'invente RIEN (pas d'hallucinations). "
+        "Sois concis, professionnel et chaleureux."
     )
     
     response = run_agent(user_input, instructions, [search_portfolio], api_key, model_name, history)

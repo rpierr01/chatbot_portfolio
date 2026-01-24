@@ -16,31 +16,73 @@ index = Index(
 def improved_chunking(content, max_char=1000):
     """
     Découpe le contenu Markdown en sections cohérentes tout en respectant une taille maximale.
+    Préserve le titre principal (H1) pour donner du contexte à chaque chunk.
     """
-    # On commence par découper par les titres de niveau 2
-    sections = content.split("\n## ")
+    # Extraction du titre principal (H1)
+    h1_match = re.search(r"^#\s+(.*)", content, re.MULTILINE)
+    main_title = h1_match.group(1) if h1_match else "Général"
+    
+    # On découpe par les titres de niveau 2
+    # Le split garde le délimiteur si on utilise une capture, mais ici on split simple
+    # On assume que le fichier commence par le H1, puis des H2
+    
+    # On sépare le préambule (avant le premier H2) du reste
+    parts = re.split(r"(^##\s+.*)", content, flags=re.MULTILINE)
+    
+    chunks = []
+    
+    # Le premier élément est le préambule (H1 + intro)
+    preamble = parts[0].strip()
+    if preamble:
+       chunks.append(preamble)
+       
+    # Les éléments suivants vont par paire (Titre H2, Contenu) à cause du split avec capture
+    # Ou si on split sans capture, on perd le titre.
+    # Avec `sections = content.split("\n## ")` c'était plus simple mais moins précis.
+    
+    # Reprenons la logique simple mais en renforçant le contexte
+    # On ignore le H1 dans le split initial pour ne pas le casser
+    
+    raw_sections = content.split("\n## ")
+    
     final_chunks = []
     
-    for i, section in enumerate(sections):
+    for i, section in enumerate(raw_sections):
         text = section.strip()
-        if i > 0:
-            text = f"## {text}"
+        
+        # Si c'est la première section et qu'elle contient le H1, on la garde telle quelle
+        # (C'est souvent l'intro)
+        if i == 0:
+            full_text = text
+        else:
+            # Pour les sections suivantes (qui étaient des H2), on reconstruit le titre H2
+            # ET on ajoute le contexte du H1 si ce n'est pas déjà inclus
+            full_text = f"Contexte : {main_title}\n## {text}"
             
         # Si la section est trop longue, on la redécoupe par paragraphes
-        if len(text) > max_char:
-            paragraphs = text.split("\n\n")
+        if len(full_text) > max_char:
+            paragraphs = full_text.split("\n\n")
             current_chunk = ""
             for para in paragraphs:
-                if len(current_chunk) + len(para) < max_char:
-                    current_chunk += para + "\n\n"
+                # On s'assure que le contexte est rappelé si on coupe trop fin
+                # (Optionnel, mais mieux pour la sécurité)
+                chunk_candidate = (current_chunk + "\n\n" + para).strip()
+                
+                if len(chunk_candidate) < max_char:
+                    current_chunk = chunk_candidate
                 else:
                     if current_chunk:
-                        final_chunks.append(current_chunk.strip())
-                    current_chunk = para + "\n\n"
+                        final_chunks.append(current_chunk)
+                    # Nouveau chunk : on remet le contexte si besoin
+                    # Pour simplifier, on ne force pas le contexte sur CHAQUE paragraphe découpé
+                    # sauf si on veut être très strict. 
+                    # Ici on va simplement ajouter le paragraphe.
+                    current_chunk = para
+            
             if current_chunk:
-                final_chunks.append(current_chunk.strip())
+                final_chunks.append(current_chunk)
         else:
-            final_chunks.append(text)
+            final_chunks.append(full_text)
             
     return final_chunks
 
@@ -49,7 +91,8 @@ def ingest_data():
     print("Suppression des données précédentes...")
     index.delete("*")
 
-    data_path = "data/*.md"
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(base_dir, "data", "*.md")
     files = glob.glob(data_path)
     
     if not files:
