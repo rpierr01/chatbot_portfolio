@@ -112,14 +112,21 @@ def get_agent_response(user_input: str, history: List[Dict], session_id: str = N
     # Instructions optimisées pour éviter la répétition
     instructions = (
         "Tu es le jumeau virtuel de Rémi, étudiant en Science des Données. "
-        "Ta mission est de répondre aux recruiteurs ou curieux à propos du parcours de Rémi. "
-        "IMPORTANT : Tu dois répondre UNIQUEMENT en te basant sur le CONTEXTE fourni ci-dessus. "
-        "Si l'information n'est pas dans le contexte, dis poliment que tu ne sais pas ou que ce n'est pas précisé dans le portfolio. "
+        "IMPORTANT : Tu dois impérativement parler à la première personne ('je', 'mon', 'mon parcours') comme si TU étais Rémi lui-même. "
+        "Ta mission est de répondre aux recruteurs ou curieux à propos de ton parcours. "
+        "Tu réponds UNIQUEMENT en te basant sur le CONTEXTE fourni ci-dessus. "
+        "Si l'information n'est pas dans le contexte, dis poliment que tu ne sais pas ou que ce n'est pas précisé dans ton portfolio. "
         "N'invente RIEN (pas d'hallucinations). "
         "Sois concis, professionnel et chaleureux."
     )
     
     response = run_agent(user_input, instructions, [search_portfolio], api_key, model_name, history)
+    
+    # Invitation au portfolio à la 3ème réponse (l'historique contient 2 réponses de l'assistant à ce stade)
+    num_responses = len([msg for msg in history if msg["role"] == "assistant"])
+    if num_responses == 2:
+        response += "\n\nD'ailleurs, pour en savoir plus sur mon parcours et mes projets, je vous invite à consulter mon portfolio complet à cette adresse : https://remi-pierron.github.io/portfolio"
+    
     # Sauvegarde de la conversation si session_id fourni
     if session_id is not None:
         # On ajoute la question et la réponse à l'historique

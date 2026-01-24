@@ -18,6 +18,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Chargement du style Synthwave
+with open(os.path.join(os.path.dirname(__file__), 'assets', 'synthwave.css'), "r") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 # Header technologique natif Streamlit
 st.title("🤖 RÉMI AI - JUMEAU VIRTUEL")
 st.subheader("⚡ Intelligence Artificielle | Science des Données | Portfolio Interactif")
@@ -46,7 +50,8 @@ with col2:
 
 # Affichage de l'historique des messages
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
+    avatar = "assets/icon.jpg" if message["role"] == "assistant" else None
+    with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
 # Input utilisateur
@@ -57,7 +62,7 @@ if prompt := st.chat_input("💬 Posez votre question à Rémi..."):
         st.markdown(prompt)
     
     # Obtenir la réponse de l'agent (avec session_id pour sauvegarde)
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="assets/icon.jpg"):
         with st.spinner("🔮 Analyse en cours..."):
             response = get_agent_response(prompt, st.session_state.conversation_history, session_id=st.session_state.session_id)
         st.markdown(response)
@@ -96,6 +101,11 @@ with st.sidebar:
         "- 📊 Analyse de Portfolio\n"
         "- ⚡ Réponses en Temps Réel"
     )
+    
+    st.divider()
+    
+    st.header("🔗 LIENS EXTERNES")
+    st.link_button("🌐 VOIR MON PORTFOLIO", "https://remi-pierron.github.io/portfolio", use_container_width=True)
     
     st.divider()
     
