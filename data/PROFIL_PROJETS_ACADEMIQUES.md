@@ -3,6 +3,9 @@
 ## Projets BUT3 SD VCOD
 - Projets d'informatique décisionnelle
 - Tableaux de bord web dynamiques
+- Réseaux de neurones : création d'un réseau de neurones pour la classification d'images
+- Tableau de bord en javascript
+- Dossier d'économie sur l'inflation en Europe
 
 ## Projets BUT2 SD VCOD
 - Community manager des réseaux de Science des Données

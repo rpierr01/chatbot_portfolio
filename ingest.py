@@ -7,7 +7,7 @@ from upstash_vector import Index
 # 1. Chargement des variables d'environnement
 load_dotenv()
 
-# 2. Connexion à l'index Upstash Vector
+# On se connecte à la base de données vectorielle Upstash
 index = Index(
     url=os.getenv("UPSTASH_VECTOR_REST_URL"), 
     token=os.getenv("UPSTASH_VECTOR_REST_TOKEN")
@@ -15,23 +15,23 @@ index = Index(
 
 def improved_chunking(content, max_char=1000):
     """
-    Découpe le contenu Markdown en sections cohérentes tout en respectant une taille maximale.
-    Préserve le titre principal (H1) pour donner du contexte à chaque chunk.
+    Découpe le contenu Markdown en morceaux cohérents sans dépasser une taille max.
+    On garde le titre principal (H1) pour donner du contexte à chaque morceau.
     """
-    # Extraction du titre principal (H1)
+    # On récupère le titre principal du document (le H1)
     h1_match = re.search(r"^#\s+(.*)", content, re.MULTILINE)
     main_title = h1_match.group(1) if h1_match else "Général"
     
-    # On découpe par les titres de niveau 2
-    # Le split garde le délimiteur si on utilise une capture, mais ici on split simple
-    # On assume que le fichier commence par le H1, puis des H2
+    # On découpe le contenu par les titres de niveau 2 (H2)
+    # Le split garde le délimiteur si on utilise une capture, mais ici on fait simple
+    # On suppose que le fichier commence par le H1, puis des H2
     
     # On sépare le préambule (avant le premier H2) du reste
     parts = re.split(r"(^##\s+.*)", content, flags=re.MULTILINE)
     
     chunks = []
     
-    # Le premier élément est le préambule (H1 + intro)
+    # Le premier élément c'est le préambule (H1 + intro)
     preamble = parts[0].strip()
     if preamble:
        chunks.append(preamble)
@@ -51,7 +51,7 @@ def improved_chunking(content, max_char=1000):
         text = section.strip()
         
         # Si c'est la première section et qu'elle contient le H1, on la garde telle quelle
-        # (C'est souvent l'intro)
+        # (c'est souvent l'intro du document)
         if i == 0:
             full_text = text
         else:
@@ -87,15 +87,14 @@ def improved_chunking(content, max_char=1000):
     return final_chunks
 
 def ingest_data():
-    # Nettoyage de l'index avant nouvelle ingestion
-    print("Suppression des données précédentes...")
+    # On nettoie l'index avant d'ajouter de nouvelles données
     print("Suppression des données précédentes...")
     try:
         index.reset()
     except Exception as e:
         print(f"Warning: Impossible de reset l'index ({e}). Tentative de suppression massive...")
-        # Fallback si reset n'existe pas (dépend de la version SDK)
-        # Mais reset() est standard sur les versions récentes
+        # Plan B si reset n'existe pas (dépend de la version du SDK)
+        # Mais normalement reset() est standard sur les versions récentes
         pass
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -106,7 +105,7 @@ def ingest_data():
         print("Aucun fichier trouvé.")
         return
 
-    all_vectors = [] # Liste pour le batching
+    all_vectors = []  # On va regrouper tous les vecteurs pour les envoyer en une fois
     print(f"Préparation de l'indexation pour {len(files)} fichiers...")
 
     for file_path in files:
@@ -117,13 +116,13 @@ def ingest_data():
         chunks = improved_chunking(content)
         
         for i, chunk in enumerate(chunks):
-            # Extraction du titre de la section pour les métadonnées
+            # On extrait le titre de la section pour les métadonnées
             title_match = re.search(r"^#+\s+(.*)", chunk)
             section_title = title_match.group(1) if title_match else "Général"
             
             chunk_id = f"{file_name}-chunk-{i}"
             
-            # CRUCIAL : On ajoute 'text' dans les métadonnées car agent.py le recherche
+            # IMPORTANT : On ajoute 'text' dans les métadonnées car agent.py en a besoin
             all_vectors.append((
                 chunk_id, 
                 chunk, 
@@ -134,7 +133,7 @@ def ingest_data():
                 }
             ))
 
-    # Envoi par lots (Batch Upsert) - Beaucoup plus efficace que l'envoi un par un
+    # On envoie tous les vecteurs en une seule fois (beaucoup plus rapide qu'un par un)
     if all_vectors:
         print(f"Envoi de {len(all_vectors)} vecteurs vers Upstash...")
         index.upsert(vectors=all_vectors)

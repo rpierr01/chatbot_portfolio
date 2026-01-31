@@ -1,7 +1,7 @@
 # Expérience Professionnelle
 
 ## Alternance en cours
-**Assistant Data Science - Retour de Plage** (Île d'Oléron, 2024-2025)
+**Assistant Data Science - Retour de Plage** (Île d'Oléron, 2025-2026)
 - Entreprise : Bijouterie artisanale française
 - Missions :
   - Création de tableaux de bord automatisés sur les stocks dormants
@@ -9,7 +9,7 @@
   - Utilisation de VBA et Python pour l'automatisation
 
 ## Stage International
-**Stagiaire en Statistiques - Johannes Kepler Universität (JKU)** (Linz, Autriche, Avril-Juin 2024)
+**Stagiaire en Statistiques - Johannes Kepler Universität (JKU)** (Linz, Autriche, Avril-Juin 2025)
 - Programme Erasmus de 3 mois
 - Département des statistiques
 - Projets :

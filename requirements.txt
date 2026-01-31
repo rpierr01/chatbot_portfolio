@@ -4,3 +4,4 @@ upstash-vector
 pytest
 python-dotenv
 upstash_redis
+watchdog
