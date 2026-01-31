@@ -111,6 +111,9 @@ OPENAI_API_KEY=...
 UPSTASH_VECTOR_REST_URL=...
 UPSTASH_REDIS_REST_URL=...
 ```
+- **Clé API personnalisée** : J'ai créé ma propre clé API pour ChatGPT afin d'utiliser ce projet dans un contexte réel.
+- **URL de l'application** : [Chatbot Portfolio](https://chatbotportfolio-8ppsx33qjqnnsdftan9gkb.streamlit.app)
+
 - **Commande** : `streamlit run app.py`.
 
 ---
@@ -135,6 +138,6 @@ Le projet répond aux consignes du README :
 ✅ **Étape 5** : Outil RAG `search_portfolio`  
 ✅ **Étape 6** : Interface Streamlit intuitive  
 ✅ **Étape 7** : Déploiement sur Streamlit Cloud  
-✅ **Bonus** : Mémoire des conversations avec Redis
+✅ **Bonus** : Mémoire des conversations avec Redis  
 
 L'architecture est robuste, optimisée et offre une expérience utilisateur fluide.
