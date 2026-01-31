@@ -86,20 +86,6 @@ with st.sidebar:
 
     st.divider()
     
-    st.header("🎯 SYSTÈME D'INFORMATION")
-    
-    # Quelques statistiques en temps réel
-    st.metric(label="MESSAGES ÉCHANGÉS", value=len(st.session_state.messages))
-    st.metric(label="INTERACTIONS", value=len(st.session_state.conversation_history) // 2)
-    
-    # Durée de la session en cours
-    if "start_time" in st.session_state:
-        duration = datetime.now() - st.session_state.start_time
-        minutes = int(duration.total_seconds() // 60)
-        st.metric(label="MINUTES DE SESSION", value=minutes)
-    
-    st.divider()
-    
     st.header("🔗 LIENS EXTERNES")
     st.link_button("🌐 VOIR MON PORTFOLIO", "https://remi-pierron.github.io/portfolio", use_container_width=True)
     
