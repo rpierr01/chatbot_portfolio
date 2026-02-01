@@ -80,7 +80,6 @@ st.set_page_config(
 
 #### **Sidebar interactive**
 - Gestion des sessions.
-- Statistiques en temps réel.
 - Liens externes.
 
 #### **Zone de conversation**
